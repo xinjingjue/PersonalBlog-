@@ -2,15 +2,15 @@ import axios from 'axios'
 
 import { ElLoading } from 'element-plus'
 import router from '@/router'
-import message from '@/utils/Message'
-
+import message from './Messages';
+import { AdminStore } from '@/stores/AdminStore';
 const contentTypeForm = "application/x-www-form-urlencoded;charset=UTF-8";
 const contentTypeJson = "application/json";
 const contentTypeFile = "multipart/form-data";
-
+const adminStore = AdminStore();
 
 const request = (config) => {
-    let { url, params, dataType = 'form', showLoading = 'true' } = config;
+    let { url, params,dataType = 'form', showLoading = 'true',method="post" } = config;
     let contentType = contentTypeForm;
     if (dataType === "json") {
         contentType = contentTypeJson;
@@ -24,11 +24,12 @@ const request = (config) => {
     }
 
     const instantce = axios.create({
-        baseURL: 'https://localhost:7104/api',
-        timeout: 10 * 1000,
+        baseURL: 'https://localhost:7104',
+        timeout: 20 * 1000,
         headers: {
             'Content-Type': contentType,
             'X-Requested-With': 'XMLHttpRequest',
+            
         }
     })
 
@@ -36,6 +37,7 @@ const request = (config) => {
 
     instantce.interceptors.request.use(
         (config) => {
+            config.headers.Authorization = "Bearer "+adminStore.token;
             if (showLoading) {
                 loading = ElLoading.service({
                     lock: true,
@@ -60,6 +62,7 @@ const request = (config) => {
             if (showLoading && loading) {
                 loading.close();
             }
+            
             const responseData = response.data;
             if (responseData.status == "Error") {
                 if (responseData.code == 501) {
@@ -72,11 +75,8 @@ const request = (config) => {
                     config.errorCallback();
                 }
                 return Promise.reject(responseData.message);
-            } else {
-                if (responseData.code == 200) {
-                    return responseData;
-                }
             }
+            return response;
         },
         (error) => {
             console.log(error);
@@ -87,10 +87,17 @@ const request = (config) => {
         }
     )
 
-    return instantce.post(url, params).catch(error => {
-        message.error(error)
-        return null;
-    })
-}
+    if (method.toLowerCase() === 'get') {
+        return instantce.get(url, { params: params }).catch(error => {
+            message.error(error);
+            return null;
+        });
+    } else {
+        return instantce.post(url, params).catch(error => {
+            message.error(error);
+            return null;
+        });
+    }
+};
 
 export default request;

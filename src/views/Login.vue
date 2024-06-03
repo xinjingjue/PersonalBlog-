@@ -36,12 +36,16 @@
 import axios from "axios";
 import { ref, reactive, inject, onMounted } from "vue";
 import request from "@/utils/Request"
+import { AdminStore } from "@/stores/AdminStore";
+import message from "@/utils/Messages"
+
 //没有封装
 const axiosInstance = axios.create({
     baseURL:"https://localhost:7104",
-    timeout:1000,
+    timeout:1000*10,
    
 });
+const $cookies = inject('$cookies')
 //表单数据校验
 const rules = {
     account:[{
@@ -71,6 +75,9 @@ const checkCodeId = ref('');
 onMounted(() => {
     checkCodeId.value = Math.floor(Math.random() * 1000 + 1); 
     LoadCheckCode();
+    //检查cookies中有没有账号密码
+    fromData.account = $cookies.get("blog_account");
+    fromData.password = $cookies.get("blog_password");
 });
 //当点击验证码图片的时候加载新的图片进行使用
 const checkCodeOnClick = async ()=>{
@@ -91,14 +98,45 @@ const LoadCheckCode = async () => {
     }
 };
 //登录校验
-const login = ()=>{
-    formDataRef.value.validate((valid)=>{
+const login = async ()=>{
+    formDataRef.value.validate(async (valid)=>{
         //验证不通过就退出
         if(!valid){
             return;
         }
+        let res = await axiosInstance.get("api/Captcha/validate",{
+            params:{
+                id:checkCodeId.value,
+                code:fromData.checkCode
+            }
+            
+        });
+        console.log(res.data);
+        if(res.data){
+            //等待一秒
+            await new Promise(resolve => setTimeout(resolve, 1000)); 
+            let token = await request({
+                url:"api/Login/Login",
+                params:{
+                    account:fromData.account,
+                    password:fromData.password
+                },
+                dataType:"json"
+            });
+            if(token.data.code ===200){
+                AdminStore.token = token.data.data;
+                if(fromData.rememberMe===true){
+                    $cookies.set("blog_account",fromData.account);
+                    $cookies.set("blog_password",fromData.password);
+                }
+            }
+        }
         else{
-            Request.Request()
+            await new Promise(resolve => setTimeout(resolve, 1000)); 
+            message.error("验证码输入错误");
+            checkCodeId.value = Math.floor(Math.random() * 1000 + 1); 
+            LoadCheckCode();
+
         }
     });
 };

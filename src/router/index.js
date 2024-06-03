@@ -8,6 +8,12 @@ const router = createRouter({
       name: 'Login',
       component: ()=>import("../views/Login.vue")
     },
+    {
+      path:'/',
+      name:"框架页",
+      component:()=>import('../views/Framework.vue')
+
+    }
   ]
 })
 
