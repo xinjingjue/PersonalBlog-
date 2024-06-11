@@ -7,7 +7,7 @@
                     <span>欢迎回来，</span>
                     <el-dropdown trigger="click">
                         <span class="account-name">
-                           {{ userInfo.account }}
+                            {{ userInfo.name}}
                             <span class="iconfont icon-close"></span>
                         </span>
                         <template #dropdown>
@@ -57,11 +57,9 @@ import { useRoute, useRouter } from 'vue-router'
 import { AdminStore } from "@/stores/AdminStore";
 const router = useRouter();
 const route = useRoute();
-const $cookies = inject("$cookies");
-const adminstore = AdminStore();
+const adminStore = AdminStore()
+// const $cookies = inject("$cookies");
 const userInfo = ref({
-    account: '',
-    password: ''
 });
 const menuList = ref([
     {
@@ -125,6 +123,7 @@ const menuList = ref([
 
 onMounted(() => {
     init();
+    
 });
 const OpenClose = (index) => {
     const flag = menuList.value[index].open;
@@ -132,20 +131,24 @@ const OpenClose = (index) => {
 
 
 }
-const init = () => {
-    let flag = $cookies.isKey("blog_account");
+const init = async () => {
+    let flag = $cookies.isKey("blog_token");
     if (!flag) {
         router.push("/login")
     }
-    // else if (!adminstore.token) {
-    //     router.push("/login")
-    // }
-    else {
-        userInfo.value.account = $cookies.get("blog_account");
-        userInfo.value.password = $cookies.get("blog_password");
-        console.log(userInfo.value);
-    }
-
+    console.log($cookies.get("blog_token"))
+    await new Promise(resolve=>setTimeout(resolve,1000));
+    let userinfo = await request({
+        url:"api/Login/GetUserInfo",
+        params:{
+            userName:$cookies.get("blog_account")
+        },
+        token:$cookies.get("blog_token"),
+        method:"get"
+    })
+    userInfo.value = userinfo.data.data
+    //把UserInfo的值赋值给pinia
+    adminStore.userInfo.value = userInfo.value
 }
 </script>
 
@@ -164,9 +167,11 @@ const init = () => {
         .user-info {
             display: flex;
             align-items: center;
+
             .account-name {
                 color: rgb(75, 75, 243);
                 cursor: pointer;
+
                 .icon-close {
                     font-size: 14px;
                 }

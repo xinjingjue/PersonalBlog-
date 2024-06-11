@@ -38,7 +38,9 @@ import { ref, reactive, inject, onMounted } from "vue";
 import request from "@/utils/Request"
 import { AdminStore } from "@/stores/AdminStore";
 import message from "@/utils/Messages"
+import { useRoute, useRouter } from 'vue-router'
 
+const router = useRouter();
 //没有封装
 const axiosInstance = axios.create({
     baseURL:"https://localhost:7104",
@@ -124,11 +126,13 @@ const login = async ()=>{
                 dataType:"json"
             });
             if(token.data.code ===200){
-                AdminStore.token = token.data.data;
                 if(fromData.rememberMe===true){
                     $cookies.set("blog_account",fromData.account);
                     $cookies.set("blog_password",fromData.password);
+                    router.push("/")
                 }
+                $cookies.set("blog_token",token.data.data.token);
+                router.push("/")
             }
         }
         else{

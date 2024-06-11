@@ -4,13 +4,15 @@ import { ElLoading } from 'element-plus'
 import router from '@/router'
 import message from './Messages';
 import { AdminStore } from '@/stores/AdminStore';
+
+
 const contentTypeForm = "application/x-www-form-urlencoded;charset=UTF-8";
 const contentTypeJson = "application/json";
 const contentTypeFile = "multipart/form-data";
 const adminStore = AdminStore();
 
 const request = (config) => {
-    let { url, params,dataType = 'form', showLoading = 'true',method="post" } = config;
+    let { url, params,dataType = 'form',token =null ,showLoading = 'true',method="post",baseurl="https://localhost:7104"} = config;
     let contentType = contentTypeForm;
     if (dataType === "json") {
         contentType = contentTypeJson;
@@ -24,7 +26,7 @@ const request = (config) => {
     }
 
     const instantce = axios.create({
-        baseURL: 'https://localhost:7104',
+        baseURL: baseurl,
         timeout: 20 * 1000,
         headers: {
             'Content-Type': contentType,
@@ -37,7 +39,9 @@ const request = (config) => {
 
     instantce.interceptors.request.use(
         (config) => {
-            config.headers.Authorization = "Bearer "+adminStore.token;
+            if(token!==null){
+                config.headers.Authorization = "Bearer "+token;
+            }
             if (showLoading) {
                 loading = ElLoading.service({
                     lock: true,
