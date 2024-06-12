@@ -84,8 +84,14 @@ const request = (config) => {
         },
         (error) => {
             console.log(error);
+            // Todo当401错误 跳转到login界面
+
             if (showLoading && loading) {
                 loading.close();
+            }
+
+            if(error.response &&error.response.status===401){
+                router.push('/login')
             }
             return Promise.reject("网络异常");
         }

@@ -4,7 +4,9 @@ import axios, { Axios } from 'axios';
 export const AdminStore = defineStore('admin',
 ()=>{
   const userInfo = ref({});
-  return{userInfo}
+  const profileServerPath = ref('http://175.178.152.182:8090/profile/');
+  const noteServerPath = ref('http://175.178.152.182:8090/note/')
+  return{userInfo,profileServerPath,noteServerPath}
 }
 
 )

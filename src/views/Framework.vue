@@ -17,6 +17,7 @@
                             </el-dropdown-menu>
                         </template>
                     </el-dropdown>
+                    <div class="avater"><img :src="adminStore.profileServerPath+'/'+userInfo.profilePath"></div>
                 </div>
             </el-header>
             <el-container class="container">
@@ -35,7 +36,7 @@
 
                                     <ul class="sub-menu" v-show="menu.open">
                                         <li v-for="subMenu in menu.children">
-                                            <span class="sub-menu-item">{{ subMenu.title }}</span>
+                                            <router-link :to="subMenu.path" :class="['sub-menu-item',activePath===subMenu.path?'active':'']">{{ subMenu.title }}</router-link>
                                         </li>
                                     </ul>
                                 </li>
@@ -43,7 +44,9 @@
                         </div>
                     </div>
                 </el-aside>
-                <el-main class="right-main">Main</el-main>
+                <el-main class="right-main">
+                    <RouterView></RouterView>
+                </el-main>
             </el-container>
         </el-container>
     </div>
@@ -51,7 +54,7 @@
 
 <script setup>
 
-import { ref, inject, onMounted } from 'vue'
+import { ref, inject, onMounted ,watch} from 'vue'
 import request from '@/utils/Request'
 import { useRoute, useRouter } from 'vue-router'
 import { AdminStore } from "@/stores/AdminStore";
@@ -61,6 +64,11 @@ const adminStore = AdminStore()
 // const $cookies = inject("$cookies");
 const userInfo = ref({
 });
+const activePath=ref(null);
+watch(route,(newVal,oldValue)=>{
+    console.log(newVal.path)
+    activePath.value=newVal.path
+},{immediate:true,deep:true});
 const menuList = ref([
     {
         title: "博客",
@@ -176,7 +184,14 @@ const init = async () => {
                     font-size: 14px;
                 }
             }
-
+            .avater{
+                width: 40px;
+                margin-left: 20px;
+                img{
+                    width:75%;
+                    border-radius: 25px;
+                }
+            }
         }
     }
 
@@ -236,8 +251,12 @@ const init = async () => {
                         display: block;
                         line-height: 35px;
                         padding: 0px 10px;
+                        text-decoration: none;
+                        color: #3f4042;
                     }
-
+                    .active{
+                        background: #ddd;
+                    }
                     .sub-menu-item:hover {
                         background: #ddd;
                     }
